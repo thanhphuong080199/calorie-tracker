@@ -1,0 +1,41 @@
+name: EAS Build (Android preview)
+
+# Builds the internal-distribution APK whenever code lands on main.
+# The actual build runs on EAS servers (--no-wait), so this job finishes
+# in ~1 min; watch progress at https://expo.dev. GEMINI_API_KEY is pulled
+# from the EAS "preview" environment automatically (see eas.json + app.config.ts).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # allow manual runs from the Actions tab
+
+# Don't stack builds if several merges land quickly — cancel the older run.
+concurrency:
+  group: eas-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Trigger EAS preview build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set up EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build Android (preview / APK)
+        run: eas build --platform android --profile preview --non-interactive --no-wait
