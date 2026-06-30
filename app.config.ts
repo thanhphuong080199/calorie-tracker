@@ -54,7 +54,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   extra: {
     geminiApiKey: process.env.GEMINI_API_KEY ?? "",
-    // After running `eas init`, paste the printed project id here:
-    // eas: { projectId: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },
+    eas: { projectId: "98e7d9a4-4a01-4ddc-bfab-3ce4767ea0bc" },
   },
 });
