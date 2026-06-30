@@ -39,7 +39,13 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
-      <View className="px-5 pt-2 pb-3">
+      <View className="px-5 pt-2 flex-row items-center">
+        <Text className="text-textPrimary text-xl font-display">
+          Calorie Tracker
+        </Text>
+        <Text className="text-accent text-xl font-display">.</Text>
+      </View>
+      <View className="px-5 pt-1 pb-3">
         <DateNavigator date={date} onChange={setDate} />
       </View>
 
@@ -96,7 +102,7 @@ export default function HomeScreen() {
             elevation: 6,
           }}
         >
-          <Plus color="#0F0F0F" size={32} strokeWidth={2.5} />
+          <Plus color={colors.onAccent} size={32} strokeWidth={2.5} />
         </Pressable>
       ) : null}
     </SafeAreaView>

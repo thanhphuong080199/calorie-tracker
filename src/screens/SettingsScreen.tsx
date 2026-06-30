@@ -112,7 +112,7 @@ export default function SettingsScreen() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
-        <Text className="text-textPrimary text-2xl font-bold mb-6">
+        <Text className="text-textPrimary text-2xl font-display mb-6">
           Settings
         </Text>
 
@@ -122,7 +122,10 @@ export default function SettingsScreen() {
             <Flame color={colors.warn} size={24} />
           </View>
           <View>
-            <Text className="text-textPrimary text-xl font-bold">
+            <Text
+              className="text-textPrimary text-xl font-display"
+              style={{ fontVariant: ["tabular-nums"] }}
+            >
               {streak} day{streak === 1 ? "" : "s"}
             </Text>
             <Text className="text-textMuted text-sm">
@@ -174,7 +177,7 @@ export default function SettingsScreen() {
           onPress={onSave}
           className="bg-accent rounded-xl py-3.5 items-center active:opacity-80 mt-2"
         >
-          <Text className="text-bg font-bold text-base">
+          <Text className="text-onAccent font-bold text-base">
             {saved ? "Saved ✓" : "Save"}
           </Text>
         </Pressable>

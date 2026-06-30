@@ -63,7 +63,10 @@ export default function MacroBar({ macros, targets }: Props) {
             />
             <Text className="text-textSecondary text-sm">
               {it.label}{" "}
-              <Text className="text-textPrimary font-semibold">
+              <Text
+                className="text-textPrimary font-display"
+                style={{ fontVariant: ["tabular-nums"] }}
+              >
                 {Math.round(it.grams)}g
               </Text>
               {it.target ? (

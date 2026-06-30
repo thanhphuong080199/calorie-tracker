@@ -21,9 +21,7 @@ export default function ConfidenceBadge({ level }: { level: Confidence }) {
         className="w-2 h-2 rounded-full mr-1.5"
         style={{ backgroundColor: color }}
       />
-      <Text className="text-xs font-medium" style={{ color }}>
-        {label}
-      </Text>
+      <Text className="text-textPrimary text-xs font-medium">{label}</Text>
     </View>
   );
 }

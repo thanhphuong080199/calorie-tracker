@@ -1,10 +1,10 @@
 import React, { useRef } from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, Image } from "react-native";
 // Classic (Animated-based) Swipeable instead of the Reanimated one: it needs no
 // worklets, so it works in Play Store Expo Go where the Reanimated native build
 // can mismatch. The deprecation warning is harmless for our use.
 import Swipeable from "react-native-gesture-handler/Swipeable";
-import { Trash2, Sparkles } from "lucide-react-native";
+import { Trash2, Sparkles, UtensilsCrossed } from "lucide-react-native";
 import { MealEntry } from "@/types";
 import { formatTime } from "@/utils/date";
 import { colors } from "@/theme/colors";
@@ -41,8 +41,23 @@ export default function MealRow({ meal, onDelete }: Props) {
       overshootRight={false}
       friction={2}
     >
-      <View className="flex-row items-center bg-surface rounded-2xl px-4 py-3 my-1">
-        <View className="flex-1 pr-3">
+      <View className="flex-row items-center bg-surface rounded-2xl px-3 py-3 my-1">
+        {/* Meal thumbnail — placeholder keeps rows aligned when absent. */}
+        {meal.imageUri ? (
+          <Image
+            source={{ uri: meal.imageUri }}
+            style={{ width: 52, height: 52, borderRadius: 12 }}
+          />
+        ) : (
+          <View
+            className="bg-surface2 items-center justify-center"
+            style={{ width: 52, height: 52, borderRadius: 12 }}
+          >
+            <UtensilsCrossed color={colors.textMuted} size={22} />
+          </View>
+        )}
+
+        <View className="flex-1 px-3">
           <View className="flex-row items-center">
             <Text
               className="text-textPrimary text-base font-semibold"
@@ -69,7 +84,10 @@ export default function MealRow({ meal, onDelete }: Props) {
         </View>
 
         <View className="items-end">
-          <Text className="text-textPrimary text-base font-bold">
+          <Text
+            className="text-textPrimary text-lg font-display"
+            style={{ fontVariant: ["tabular-nums"] }}
+          >
             {meal.calories}
           </Text>
           <Text className="text-textMuted text-xs">kcal</Text>
