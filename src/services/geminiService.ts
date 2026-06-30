@@ -1,10 +1,18 @@
 import Constants from "expo-constants";
 import { Confidence } from "@/types";
 
-// gemini-2.5-flash is the current free-tier vision model. (gemini-2.0-flash had
-// its free tier removed — it returns 429 "limit: 0" on the first call.) Swap
-// this for another flash model if quotas change; the request shape is the same.
-const MODEL = "gemini-2.5-flash";
+// Models tried in order. All verified to accept this exact request shape
+// (vision + responseSchema + thinkingBudget:0) on the free tier. When a model
+// is overloaded (503) or rate-limited (429) we fall through to the next — they
+// live in different quota/load buckets, so a sibling often succeeds. Avoid the
+// gemini-2.0-flash family: its free tier was removed and it 429s with limit:0.
+// The *-latest aliases track the newest stable model, surviving retirements.
+const MODELS = [
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
+  "gemini-flash-latest",
+  "gemini-flash-lite-latest",
+] as const;
 const REQUEST_TIMEOUT_MS = 25000;
 
 /** One food component Gemini broke the photo into, with per-100g nutrition. */
@@ -120,7 +128,6 @@ export async function identifyMeal(
     );
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`;
   const body = {
     contents: [
       {
@@ -145,51 +152,81 @@ export async function identifyMeal(
   const MAX_ATTEMPTS = 3;
   const MAX_AUTO_WAIT_S = 20;
 
+  // Try each model in turn. A 503 (model overloaded) is transient and specific
+  // to that model, so we fall through to the next one before surfacing an error.
   let res: Response | null = null;
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-    try {
-      res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      });
-    } catch (e) {
-      clearTimeout(timer);
-      if (e instanceof Error && e.name === "AbortError") {
-        throw new Error("Recognition timed out. Check your connection.");
+  for (let m = 0; m < MODELS.length; m++) {
+    const model = MODELS[m];
+    const isLastModel = m === MODELS.length - 1;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+
+    let tryNextModel = false;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      try {
+        res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
+      } catch (e) {
+        clearTimeout(timer);
+        if (e instanceof Error && e.name === "AbortError") {
+          throw new Error("Recognition timed out. Check your connection.");
+        }
+        throw new Error("Couldn't reach Gemini. Check your connection.");
       }
-      throw new Error("Couldn't reach Gemini. Check your connection.");
-    }
-    clearTimeout(timer);
+      clearTimeout(timer);
 
-    if (res.ok) break;
+      if (res.ok) break;
 
-    const detail = await res.text().catch(() => "");
-    if (res.status === 400 || res.status === 403) {
-      throw new Error("Gemini rejected the request — verify your API key.");
-    }
-    if (res.status === 429) {
-      const waitS = retryDelaySeconds(detail);
-      if (attempt < MAX_ATTEMPTS && waitS <= MAX_AUTO_WAIT_S) {
-        await sleep((waitS || 2) * 1000);
-        continue;
+      const detail = await res.text().catch(() => "");
+      if (res.status === 400 || res.status === 403) {
+        throw new Error("Gemini rejected the request — verify your API key.");
+      }
+      if (res.status === 429) {
+        // Rate-limited. If Gemini's RetryInfo says the wait is short, retry the
+        // same model; otherwise fall through to a sibling (separate quota) and
+        // only give up once every model is exhausted.
+        const waitS = retryDelaySeconds(detail);
+        if (attempt < MAX_ATTEMPTS && waitS > 0 && waitS <= MAX_AUTO_WAIT_S) {
+          await sleep(waitS * 1000);
+          continue;
+        }
+        if (!isLastModel) {
+          tryNextModel = true;
+          break;
+        }
+        throw new Error(
+          waitS > 0
+            ? `Gemini's free-tier limit is busy. Try again in ~${waitS}s.`
+            : "Gemini's free-tier limit reached. Wait a minute and try again.",
+        );
+      }
+      // 503 (and other 5xx): model is overloaded/unavailable. Move to the next
+      // model if we have one; otherwise report the failure.
+      if (res.status >= 500) {
+        if (!isLastModel) {
+          tryNextModel = true;
+          break;
+        }
+        throw new Error(
+          "Gemini is overloaded right now. Try again in a moment.",
+        );
       }
       throw new Error(
-        waitS > 0
-          ? `Gemini's free-tier limit is busy. Try again in ~${waitS}s.`
-          : "Gemini's free-tier limit reached. Wait a minute and try again.",
+        `Gemini error ${res.status}${detail ? `: ${detail.slice(0, 120)}` : ""}`,
       );
     }
-    throw new Error(
-      `Gemini error ${res.status}${detail ? `: ${detail.slice(0, 120)}` : ""}`,
-    );
+
+    if (tryNextModel) continue; // fall through to the next model
+    if (res && res.ok) break; // got a usable response
   }
 
   if (!res || !res.ok) {
-    throw new Error("Gemini's free-tier limit reached. Try again shortly.");
+    throw new Error("Gemini is overloaded right now. Try again shortly.");
   }
 
   const json = (await res.json()) as {
