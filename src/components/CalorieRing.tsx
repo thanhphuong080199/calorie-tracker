@@ -1,7 +1,12 @@
 import React from "react";
 import { View, Text } from "react-native";
 import Svg, { Circle } from "react-native-svg";
-import { colors, progressColor } from "@/theme/colors";
+import {
+  colors,
+  progressColor,
+  progressStatus,
+  PROGRESS_LABEL,
+} from "@/theme/colors";
 
 interface Props {
   consumed: number;
@@ -23,6 +28,8 @@ export default function CalorieRing({
   const safeTarget = target > 0 ? target : 1;
   const fraction = consumed / safeTarget;
   const ringColor = progressColor(fraction);
+  const status = progressStatus(fraction);
+  const statusLabel = PROGRESS_LABEL[status];
 
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -32,11 +39,15 @@ export default function CalorieRing({
 
   const remaining = target - consumed;
   const over = remaining < 0;
+  const remainingText = over ? `${Math.abs(remaining)} over` : `${remaining} left`;
 
   return (
     <View
       className="items-center justify-center"
       style={{ width: size, height: size }}
+      accessible
+      accessibilityRole="text"
+      accessibilityLabel={`${consumed} of ${target} kcal, ${remainingText}, ${statusLabel.toLowerCase()}`}
     >
       <Svg width={size} height={size}>
         {/* Track */}
@@ -65,17 +76,27 @@ export default function CalorieRing({
       </Svg>
 
       {/* Center readout, absolutely centered over the ring. */}
-      <View className="absolute items-center justify-center">
-        <Text className="text-textPrimary text-5xl font-bold">{consumed}</Text>
-        <Text className="text-textMuted text-sm mt-0.5">of {target} kcal</Text>
+      <View className="absolute items-center justify-center" accessible={false}>
         <Text
-          className="text-base font-semibold mt-2"
-          style={{ color: over ? colors.danger : colors.textSecondary }}
+          className="text-textPrimary text-6xl font-display"
+          style={{ fontVariant: ["tabular-nums"], letterSpacing: -1 }}
         >
-          {over
-            ? `${Math.abs(remaining)} over`
-            : `${remaining} left`}
+          {consumed}
         </Text>
+        <Text className="text-textMuted text-sm mt-0.5">of {target} kcal</Text>
+
+        {/* Status: a non-color word (plus a redundant colored dot) so the
+            on-track / near-limit / over state isn't conveyed by hue alone. */}
+        <View className="flex-row items-center mt-2">
+          <View
+            className="w-2 h-2 rounded-full mr-1.5"
+            style={{ backgroundColor: ringColor }}
+          />
+          <Text className="text-textPrimary text-sm font-semibold">
+            {statusLabel}
+          </Text>
+          <Text className="text-textSecondary text-sm"> · {remainingText}</Text>
+        </View>
       </View>
     </View>
   );

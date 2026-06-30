@@ -34,7 +34,10 @@ function MacroPill({
 }) {
   return (
     <View className="items-center flex-1">
-      <Text className="text-textPrimary text-lg font-bold">
+      <Text
+        className="text-textPrimary text-lg font-display"
+        style={{ fontVariant: ["tabular-nums"] }}
+      >
         {Math.round(grams)}g
       </Text>
       <View className="flex-row items-center mt-0.5">
@@ -139,7 +142,10 @@ export default function ResultCard({
 
       {/* Meal total */}
       <View className="items-center my-5">
-        <Text className="text-textPrimary text-5xl font-bold">
+        <Text
+          className="text-textPrimary text-5xl font-display"
+          style={{ fontVariant: ["tabular-nums"], letterSpacing: -1 }}
+        >
           {totals.calories}
         </Text>
         <Text className="text-textMuted text-sm mt-1">kcal total</Text>
@@ -182,8 +188,8 @@ export default function ResultCard({
           onPress={onSave}
           className="flex-1 flex-row items-center justify-center bg-accent rounded-xl py-3.5 active:opacity-80"
         >
-          <Check color={colors.bg} size={18} strokeWidth={2.5} />
-          <Text className="text-bg font-bold ml-2">Save</Text>
+          <Check color={colors.onAccent} size={18} strokeWidth={2.5} />
+          <Text className="text-onAccent font-bold ml-2">Save</Text>
         </Pressable>
       </View>
     </View>

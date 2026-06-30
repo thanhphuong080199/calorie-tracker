@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DailyLog, MealEntry } from "@/types";
 import { useSettingsStore, DEFAULT_SETTINGS } from "./settingsStore";
+import { deleteThumbnail } from "@/utils/image";
 
 interface LogState {
   /** Logs keyed by YYYY-MM-DD for O(1) lookup. */
@@ -48,6 +49,7 @@ export const useLogStore = create<LogState>()(
         set((state) => {
           const existing = state.logs[date];
           if (!existing) return state;
+          deleteThumbnail(existing.meals.find((m) => m.id === mealId)?.imageUri);
           return {
             logs: {
               ...state.logs,
@@ -63,6 +65,7 @@ export const useLogStore = create<LogState>()(
         set((state) => {
           const existing = state.logs[date];
           if (!existing) return state;
+          existing.meals.forEach((m) => deleteThumbnail(m.imageUri));
           return {
             logs: { ...state.logs, [date]: { ...existing, meals: [] } },
           };

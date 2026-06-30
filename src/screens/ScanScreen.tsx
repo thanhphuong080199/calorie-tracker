@@ -15,7 +15,7 @@ import { X, ImageIcon, Camera as CameraIcon, AlertTriangle } from "lucide-react-
 import { RecognitionResult, MealEntry, MealItem } from "@/types";
 import { useLogStore } from "@/store/logStore";
 import { recognizeMeal } from "@/services/recognitionService";
-import { toResizedBase64 } from "@/utils/image";
+import { toResizedBase64, saveThumbnail } from "@/utils/image";
 import { scalePer100, sumNutrition, clampGrams } from "@/utils/nutrition";
 import { today } from "@/utils/date";
 import { newId } from "@/utils/id";
@@ -34,6 +34,7 @@ export default function ScanScreen() {
   const [phase, setPhase] = useState<Phase>("capture");
   const [cameraReady, setCameraReady] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [result, setResult] = useState<RecognitionResult | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
@@ -112,9 +113,11 @@ export default function ScanScreen() {
     );
   };
 
-  const onSave = () => {
-    if (!result || result.items.length === 0) return;
+  const onSave = async () => {
+    if (!result || result.items.length === 0 || saving) return;
+    setSaving(true);
 
+    const id = newId();
     const items: MealItem[] = result.items.map((it) => ({
       name: it.name,
       grams: it.grams,
@@ -128,8 +131,19 @@ export default function ScanScreen() {
       ? "openfoodfacts"
       : "gemini_estimate";
 
+    // Persist a small thumbnail (not the full-res original). Failing to make one
+    // shouldn't block logging the meal — fall back to no image.
+    let imageUri: string | undefined;
+    if (photoUri) {
+      try {
+        imageUri = await saveThumbnail(photoUri, id);
+      } catch {
+        imageUri = undefined;
+      }
+    }
+
     const entry: MealEntry = {
-      id: newId(),
+      id,
       name: result.name,
       calories: totals.calories,
       protein: totals.protein,
@@ -138,7 +152,7 @@ export default function ScanScreen() {
       servingG,
       source,
       timestamp: new Date().toISOString(),
-      imageUri: photoUri ?? undefined,
+      imageUri,
       items,
     };
     addMeal(today(), entry);
@@ -189,7 +203,7 @@ export default function ScanScreen() {
             onPress={requestPermission}
             className="bg-accent rounded-xl px-6 py-3 mt-6 active:opacity-80"
           >
-            <Text className="text-bg font-bold">Grant camera access</Text>
+            <Text className="text-onAccent font-bold">Grant camera access</Text>
           </Pressable>
           <Pressable
             onPress={onPickFromGallery}
@@ -269,10 +283,10 @@ export default function ScanScreen() {
         ) : null}
         <View className="absolute inset-0 items-center justify-center px-8">
           <ActivityIndicator size="large" color={colors.accent} />
-          <Text className="text-textPrimary text-lg font-semibold mt-4">
+          <Text className="text-white text-lg font-semibold mt-4">
             Analyzing your meal…
           </Text>
-          <Text className="text-textMuted text-center mt-1">
+          <Text className="text-white/70 text-center mt-1">
             Identifying the dish and looking up nutrition.
           </Text>
         </View>
@@ -296,7 +310,7 @@ export default function ScanScreen() {
               onPress={onRetake}
               className="bg-accent rounded-xl px-6 py-3 active:opacity-80"
             >
-              <Text className="text-bg font-bold">Try again</Text>
+              <Text className="text-onAccent font-bold">Try again</Text>
             </Pressable>
           </View>
         </View>

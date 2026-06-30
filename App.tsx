@@ -6,18 +6,22 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
   NavigationContainer,
-  DarkTheme,
+  DefaultTheme,
   Theme,
 } from "@react-navigation/native";
+import {
+  useFonts,
+  SpaceGrotesk_700Bold,
+} from "@expo-google-fonts/space-grotesk";
 import RootNavigator from "@/navigation/RootNavigator";
 import { useLogStore } from "@/store/logStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { colors } from "@/theme/colors";
 
 const navTheme: Theme = {
-  ...DarkTheme,
+  ...DefaultTheme,
   colors: {
-    ...DarkTheme.colors,
+    ...DefaultTheme.colors,
     background: colors.bg,
     card: colors.surface,
     border: colors.border,
@@ -31,12 +35,15 @@ export default function App() {
   // so the first paint reflects saved data instead of defaults flashing.
   const settingsReady = useSettingsStore((s) => s._hydrated);
   const logsReady = useLogStore((s) => s._hydrated);
-  const ready = settingsReady && logsReady;
+  const [fontsReady] = useFonts({
+    SpaceGrotesk_700Bold,
+  });
+  const ready = settingsReady && logsReady && fontsReady;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
         {ready ? (
           <NavigationContainer theme={navTheme}>
             <RootNavigator />

@@ -11,14 +11,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
-  userInterfaceStyle: "dark",
-  backgroundColor: "#0F0F0F",
+  userInterfaceStyle: "light",
+  backgroundColor: "#F5F7F1",
   ios: {
     supportsTablet: true,
   },
   android: {
     adaptiveIcon: {
-      backgroundColor: "#0F0F0F",
+      backgroundColor: "#F5F7F1",
       foregroundImage: "./assets/android-icon-foreground.png",
       monochromeImage: "./assets/android-icon-monochrome.png",
     },
@@ -34,9 +34,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         image: "./assets/splash-icon.png",
         resizeMode: "contain",
-        backgroundColor: "#0F0F0F",
+        backgroundColor: "#F5F7F1",
       },
     ],
+    "expo-font",
     [
       "expo-camera",
       {
