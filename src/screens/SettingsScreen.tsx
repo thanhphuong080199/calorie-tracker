@@ -8,11 +8,17 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Flame, Trash2 } from "lucide-react-native";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Flame, Trash2, SlidersHorizontal, ChevronRight } from "lucide-react-native";
+import { RootStackParamList } from "@/navigation/types";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useLogStore } from "@/store/logStore";
 import { computeStreak, today } from "@/utils/date";
+import { GOAL_LABELS } from "@/utils/tdee";
 import { colors } from "@/theme/colors";
+
+type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 /** Parse a numeric input to a positive integer, or undefined when blank. */
 function toNum(v: string): number | undefined {
@@ -50,7 +56,9 @@ function NumberField({ label, unit, value, onChangeText, placeholder }: FieldPro
 }
 
 export default function SettingsScreen() {
+  const navigation = useNavigation<Nav>();
   const settings = useSettingsStore((s) => s);
+  const profile = useSettingsStore((s) => s.profile);
   const setDailyCalorieTarget = useSettingsStore((s) => s.setDailyCalorieTarget);
   const setMacroTargets = useSettingsStore((s) => s.setMacroTargets);
 
@@ -133,6 +141,30 @@ export default function SettingsScreen() {
             </Text>
           </View>
         </View>
+
+        {/* TDEE profile → recalculate targets */}
+        <Text className="text-textSecondary text-sm font-semibold mb-3">
+          CALORIE PLAN
+        </Text>
+        <Pressable
+          onPress={() => navigation.navigate("EditProfile", { edit: true })}
+          className="flex-row items-center bg-surface rounded-2xl p-4 mb-6 active:opacity-80"
+        >
+          <View className="w-11 h-11 rounded-full bg-surface2 items-center justify-center mr-3">
+            <SlidersHorizontal color={colors.accent} size={22} />
+          </View>
+          <View className="flex-1">
+            <Text className="text-textPrimary text-base font-semibold">
+              {profile ? "Edit profile & recalculate" : "Set up your plan"}
+            </Text>
+            <Text className="text-textMuted text-sm">
+              {profile
+                ? `${profile.goals.map((g) => GOAL_LABELS[g].title).join(", ") || "Maintain"} · ${settings.dailyCalorieTarget.toLocaleString()} kcal/day`
+                : "Estimate your calories from your body & goal"}
+            </Text>
+          </View>
+          <ChevronRight color={colors.textMuted} size={20} />
+        </Pressable>
 
         {/* Targets */}
         <Text className="text-textSecondary text-sm font-semibold mb-3">

@@ -1,10 +1,12 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { UserSettings } from "@/types";
+import { UserSettings, TdeeProfile } from "@/types";
+import { calorieTarget, macroTargets } from "@/utils/tdee";
 
 export const DEFAULT_SETTINGS: UserSettings = {
   dailyCalorieTarget: 2000,
+  onboarded: false,
 };
 
 interface SettingsState extends UserSettings {
@@ -16,6 +18,11 @@ interface SettingsState extends UserSettings {
     carbsTarget?: number;
     fatTarget?: number;
   }) => void;
+  /**
+   * Save the TDEE profile and derive the calorie + macro targets from it in one
+   * step, marking the user onboarded. Called from the onboarding flow.
+   */
+  setProfile: (profile: TdeeProfile) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -31,6 +38,18 @@ export const useSettingsStore = create<SettingsState>()(
           carbsTarget: m.carbsTarget,
           fatTarget: m.fatTarget,
         }),
+      setProfile: (profile) => {
+        const dailyCalorieTarget = calorieTarget(profile);
+        const macros = macroTargets(dailyCalorieTarget, profile.dietType);
+        set({
+          profile,
+          dailyCalorieTarget,
+          proteinTarget: macros.proteinTarget,
+          carbsTarget: macros.carbsTarget,
+          fatTarget: macros.fatTarget,
+          onboarded: true,
+        });
+      },
     }),
     {
       name: "ct-settings",

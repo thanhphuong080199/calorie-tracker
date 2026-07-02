@@ -38,11 +38,59 @@ export interface DailyLog {
   calorieTarget: number; // snapshot of the target when the day was first logged
 }
 
+export type Sex = "male" | "female" | "unspecified";
+
+/** Activity multiplier buckets for the TDEE estimate (Mifflin-St Jeor). */
+export type ActivityLevel =
+  | "sedentary"
+  | "light"
+  | "moderate"
+  | "active"
+  | "very_active";
+
+/** The user's headline goal. Drives the calorie deficit/surplus. */
+export type MainGoal =
+  | "lose_weight"
+  | "gain_muscle"
+  | "maintain"
+  | "boost_energy"
+  | "improve_nutrition"
+  | "gain_weight";
+
+/** Eating style. Drives the macro split (carbs/protein/fat ratios). */
+export type DietType =
+  | "balanced"
+  | "high_protein"
+  | "low_carb"
+  | "vegetarian"
+  | "vegan"
+  | "keto"
+  | "mediterranean";
+
+/** The inputs the TDEE estimate is built from. `bodyFatPct` is optional — when
+ *  present we use the (more accurate) Katch-McArdle formula. */
+export interface TdeeProfile {
+  name?: string;
+  sex: Sex;
+  age: number; // years
+  heightCm: number;
+  weightKg: number;
+  targetWeightKg?: number;
+  bodyFatPct?: number; // 0–100, optional
+  activityLevel: ActivityLevel;
+  goals: MainGoal[]; // one or more; their calorie adjustments are averaged
+  dietType: DietType;
+}
+
 export interface UserSettings {
   dailyCalorieTarget: number;
   proteinTarget?: number;
   carbsTarget?: number;
   fatTarget?: number;
+  /** Set once the user completes the TDEE onboarding; gates first-launch flow. */
+  onboarded?: boolean;
+  /** The profile the current targets were derived from, so it can be edited. */
+  profile?: TdeeProfile;
 }
 
 /**
