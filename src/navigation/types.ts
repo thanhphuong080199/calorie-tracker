@@ -6,6 +6,8 @@ export type TabParamList = {
 };
 
 export type RootStackParamList = {
+  Onboarding: undefined;
+  EditProfile: { edit?: boolean } | undefined;
   Tabs: NavigatorScreenParams<TabParamList>;
   Scan: undefined;
 };
