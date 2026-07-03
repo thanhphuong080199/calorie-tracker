@@ -1,6 +1,8 @@
 import React from "react";
 import { View, Text } from "react-native";
+import Svg, { Circle } from "react-native-svg";
 import { Macros } from "@/types";
+import { colors } from "@/theme/colors";
 
 // Distinct chart colors for the three macros (not part of the core theme).
 export const MACRO_COLORS = {
@@ -14,20 +16,80 @@ interface Props {
   targets?: { protein?: number; carbs?: number; fat?: number };
 }
 
-const CAL_PER_G = { protein: 4, carbs: 4, fat: 9 } as const;
+/** A single macro's progress ring: grams filled toward its target. */
+function MacroRing({
+  label,
+  grams,
+  target,
+  color,
+}: {
+  label: string;
+  grams: number;
+  target?: number;
+  color: string;
+}) {
+  const size = 78;
+  const stroke = 8;
+  const radius = (size - stroke) / 2;
+  const C = 2 * Math.PI * radius;
+  const frac = target && target > 0 ? Math.min(1, grams / target) : 0;
+  const len = frac * C;
+
+  return (
+    <View className="items-center">
+      <View style={{ width: size, height: size }} className="items-center justify-center">
+        <Svg width={size} height={size}>
+          {/* Track */}
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={colors.surface2}
+            strokeWidth={stroke}
+            fill="none"
+          />
+          {/* Progress */}
+          {frac > 0 && (
+            <Circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke={color}
+              strokeWidth={stroke}
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={`${len} ${C - len}`}
+              transform={`rotate(-90 ${size / 2} ${size / 2})`}
+            />
+          )}
+        </Svg>
+        <View className="absolute items-center justify-center">
+          <Text
+            className="text-textPrimary font-display leading-none"
+            style={{ fontSize: 18, fontVariant: ["tabular-nums"] }}
+          >
+            {Math.round(grams)}
+          </Text>
+          <Text className="text-textMuted leading-none" style={{ fontSize: 10 }}>
+            g
+          </Text>
+        </View>
+      </View>
+      <Text className="text-textSecondary text-sm mt-2">{label}</Text>
+      {target ? (
+        <Text className="text-textMuted" style={{ fontSize: 11 }}>
+          of {Math.round(target)}g
+        </Text>
+      ) : null}
+    </View>
+  );
+}
 
 /**
- * Stacked composition bar (by calorie contribution) plus per-macro gram
- * readouts. Targets, when set, are shown as "Xg / Yg".
+ * Per-macro progress rings (Protein / Carbs / Fat). Each ring fills toward its
+ * gram target; the gram total sits in the centre.
  */
 export default function MacroBar({ macros, targets }: Props) {
-  const cals = {
-    protein: macros.protein * CAL_PER_G.protein,
-    carbs: macros.carbs * CAL_PER_G.carbs,
-    fat: macros.fat * CAL_PER_G.fat,
-  };
-  const totalCals = cals.protein + cals.carbs + cals.fat;
-
   const items = [
     { key: "protein", label: "Protein", grams: macros.protein, target: targets?.protein },
     { key: "carbs", label: "Carbs", grams: macros.carbs, target: targets?.carbs },
@@ -35,47 +97,16 @@ export default function MacroBar({ macros, targets }: Props) {
   ] as const;
 
   return (
-    <View>
-      {/* Stacked proportion bar */}
-      <View className="h-3 rounded-full overflow-hidden flex-row bg-surface2">
-        {totalCals > 0 ? (
-          items.map((it) => (
-            <View
-              key={it.key}
-              style={{
-                flex: cals[it.key] / totalCals,
-                backgroundColor: MACRO_COLORS[it.key],
-              }}
-            />
-          ))
-        ) : (
-          <View className="flex-1" />
-        )}
-      </View>
-
-      {/* Per-macro gram readouts */}
-      <View className="flex-row justify-between mt-3">
-        {items.map((it) => (
-          <View key={it.key} className="flex-row items-center">
-            <View
-              className="w-2.5 h-2.5 rounded-full mr-1.5"
-              style={{ backgroundColor: MACRO_COLORS[it.key] }}
-            />
-            <Text className="text-textSecondary text-sm">
-              {it.label}{" "}
-              <Text
-                className="text-textPrimary font-display"
-                style={{ fontVariant: ["tabular-nums"] }}
-              >
-                {Math.round(it.grams)}g
-              </Text>
-              {it.target ? (
-                <Text className="text-textMuted"> / {Math.round(it.target)}g</Text>
-              ) : null}
-            </Text>
-          </View>
-        ))}
-      </View>
+    <View className="flex-row justify-around">
+      {items.map((it) => (
+        <MacroRing
+          key={it.key}
+          label={it.label}
+          grams={it.grams}
+          target={it.target}
+          color={MACRO_COLORS[it.key]}
+        />
+      ))}
     </View>
   );
 }

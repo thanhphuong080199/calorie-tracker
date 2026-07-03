@@ -12,10 +12,11 @@ import { colors } from "@/theme/colors";
 interface Props {
   meal: MealEntry;
   onDelete: (id: string) => void;
+  onPress?: (id: string) => void;
 }
 
-/** A meal list item. Swipe left to reveal a delete action. */
-export default function MealRow({ meal, onDelete }: Props) {
+/** A meal list item. Tap to view details; swipe left to reveal delete. */
+export default function MealRow({ meal, onDelete, onPress }: Props) {
   const ref = useRef<Swipeable>(null);
 
   const renderRightActions = () => (
@@ -41,7 +42,10 @@ export default function MealRow({ meal, onDelete }: Props) {
       overshootRight={false}
       friction={2}
     >
-      <View className="flex-row items-center bg-surface rounded-2xl px-3 py-3 my-1">
+      <Pressable
+        onPress={() => onPress?.(meal.id)}
+        className="flex-row items-center bg-surface rounded-2xl px-3 py-3 my-1 active:opacity-70"
+      >
         {/* Meal thumbnail — placeholder keeps rows aligned when absent. */}
         {meal.imageUri ? (
           <Image
@@ -92,7 +96,7 @@ export default function MealRow({ meal, onDelete }: Props) {
           </Text>
           <Text className="text-textMuted text-xs">kcal</Text>
         </View>
-      </View>
+      </Pressable>
     </Swipeable>
   );
 }

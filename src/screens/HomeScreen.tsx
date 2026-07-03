@@ -85,6 +85,7 @@ export default function HomeScreen() {
               key={meal.id}
               meal={meal}
               onDelete={(id) => deleteMeal(date, id)}
+              onPress={(id) => navigation.navigate("MealDetail", { date, mealId: id })}
             />
           ))
         )}

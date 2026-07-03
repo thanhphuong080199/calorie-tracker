@@ -104,7 +104,7 @@ export default function RulerPicker({
             {Array.from({ length: count }).map((_, i) => {
               const major = i % majorEvery === 0;
               return (
-                <View key={i} style={{ width: TICK_GAP, alignItems: "center" }}>
+                <View key={i} style={{ width: TICK_GAP, height: 46, alignItems: "center" }}>
                   <View
                     style={{
                       width: major ? 2 : 1,
@@ -115,7 +115,15 @@ export default function RulerPicker({
                   {major && (
                     <Text
                       className="text-textMuted"
-                      style={{ fontSize: 10, marginTop: 4 }}
+                      numberOfLines={1}
+                      style={{
+                        position: "absolute",
+                        top: 32,
+                        width: 48,
+                        left: TICK_GAP / 2 - 24,
+                        textAlign: "center",
+                        fontSize: 10,
+                      }}
                     >
                       {Math.round(min + i * step)}
                     </Text>
