@@ -10,6 +10,7 @@ export type RootStackParamList = {
   EditProfile: { edit?: boolean } | undefined;
   Tabs: NavigatorScreenParams<TabParamList>;
   Scan: undefined;
+  MealDetail: { date: string; mealId: string };
 };
 
 declare global {

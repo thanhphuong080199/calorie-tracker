@@ -9,6 +9,7 @@ import HomeScreen from "@/screens/HomeScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 import ScanScreen from "@/screens/ScanScreen";
 import OnboardingScreen from "@/screens/OnboardingScreen";
+import MealDetailScreen from "@/screens/MealDetailScreen";
 
 const Tab = createBottomTabNavigator<TabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -72,6 +73,11 @@ export default function RootNavigator() {
             name="EditProfile"
             component={OnboardingScreen}
             initialParams={{ edit: true }}
+            options={{ presentation: "modal", animation: "slide_from_bottom" }}
+          />
+          <Stack.Screen
+            name="MealDetail"
+            component={MealDetailScreen}
             options={{ presentation: "modal", animation: "slide_from_bottom" }}
           />
         </>
