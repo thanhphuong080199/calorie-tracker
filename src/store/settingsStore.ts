@@ -1,12 +1,15 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { UserSettings, TdeeProfile } from "@/types";
+import { UserSettings, TdeeProfile, MealTimes } from "@/types";
 import { calorieTarget, macroTargets } from "@/utils/tdee";
+import { DEFAULT_MEAL_TIMES } from "@/utils/time";
 
 export const DEFAULT_SETTINGS: UserSettings = {
   dailyCalorieTarget: 2000,
   onboarded: false,
+  mealTimes: DEFAULT_MEAL_TIMES,
+  remindersEnabled: false,
 };
 
 interface SettingsState extends UserSettings {
@@ -23,6 +26,8 @@ interface SettingsState extends UserSettings {
    * step, marking the user onboarded. Called from the onboarding flow.
    */
   setProfile: (profile: TdeeProfile) => void;
+  setMealTimes: (mealTimes: MealTimes) => void;
+  setRemindersEnabled: (enabled: boolean) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -50,6 +55,8 @@ export const useSettingsStore = create<SettingsState>()(
           onboarded: true,
         });
       },
+      setMealTimes: (mealTimes) => set({ mealTimes }),
+      setRemindersEnabled: (remindersEnabled) => set({ remindersEnabled }),
     }),
     {
       name: "ct-settings",

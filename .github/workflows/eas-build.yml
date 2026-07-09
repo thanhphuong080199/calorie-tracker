@@ -1,13 +1,13 @@
 name: EAS Build (Android preview)
 
-# Builds the internal-distribution APK whenever code lands on main.
+# Builds the shareable internal-distribution APK. This is a NATIVE build, so
+# it's manual-only (run it from the Actions tab, or after a native/dep change
+# that OTA can't deliver). Day-to-day JS changes ship via the OTA workflow.
 # The actual build runs on EAS servers (--no-wait), so this job finishes
 # in ~1 min; watch progress at https://expo.dev. GEMINI_API_KEY is pulled
 # from the EAS "preview" environment automatically (see eas.json + app.config.ts).
 on:
-  push:
-    branches: [main]
-  workflow_dispatch: # allow manual runs from the Actions tab
+  workflow_dispatch: # manual runs only, from the Actions tab
 
 # Don't stack builds if several merges land quickly — cancel the older run.
 concurrency:

@@ -22,9 +22,13 @@ Status legend: 🟢 done · 🟡 in progress · ⚪ not started
 
 ## High value, medium effort
 
-- ⚪ **Weekly history / trends view** — 7-day calorie bar chart, average vs. goal,
-  macro breakdown over time. Best fit for the info-first identity; complements
-  the ring. Likely a third tab or a Home section.
+- 🟢 **History / trends view** — Insights tab (`InsightsScreen`) with a
+  Weekly/Monthly/Yearly segmented control + period stepper. Calorie chart
+  (`CalorieTrendChart`, tappable bar **or** line/area variants) plots average
+  daily kcal per bucket against a dashed daily-goal line with a selected-bucket
+  callout; average-vs-goal summary underneath. `MacroStackChart` shows the
+  carbs/protein/fat energy split as 100%-stacked bars. `utils/trends.ts`
+  buckets the persisted logs (7 days / weeks-of-month / 12 months).
 - ⚪ **Recent / favorite meals** — one-tap re-log of frequently eaten meals.
   Derive candidates from persisted `MealEntry` history.
 - ⚪ **Water tracking** — tappable counter on Home. Low complexity.
@@ -34,8 +38,12 @@ Status legend: 🟢 done · 🟡 in progress · ⚪ not started
 - ⚪ **Barcode scanning** — scan a packaged product's barcode → exact nutrition.
   Natural extension: Open Food Facts is already the nutrition source and is
   barcode-native.
-- ⚪ **Streak & goal notifications** — daily reminder via `expo-notifications`
-  ("you haven't logged dinner"). `computeStreak` already exists.
+- 🟢 **Meal reminders** — onboarding gains a "When do you usually eat?" step
+  (`MealTimesEditor` + `TimePicker`) that captures breakfast/lunch/dinner times
+  (`settings.mealTimes`). `services/notificationService.ts` schedules a daily
+  repeating local notification per meal via `expo-notifications`; `App.tsx`
+  reconciles the OS schedule on launch. A Settings "Reminders" toggle
+  (`remindersEnabled`) requests permission and lets the times be edited later.
 
 ## Done
 

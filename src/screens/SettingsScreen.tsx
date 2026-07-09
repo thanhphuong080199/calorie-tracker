@@ -5,18 +5,26 @@ import {
   TextInput,
   Pressable,
   ScrollView,
+  Switch,
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Flame, Trash2, SlidersHorizontal, ChevronRight } from "lucide-react-native";
+import { Flame, Trash2, SlidersHorizontal, ChevronRight, Bell } from "lucide-react-native";
 import { RootStackParamList } from "@/navigation/types";
+import { MealTimes } from "@/types";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useLogStore } from "@/store/logStore";
 import { computeStreak, today } from "@/utils/date";
 import { GOAL_LABELS } from "@/utils/tdee";
+import { DEFAULT_MEAL_TIMES } from "@/utils/time";
+import {
+  requestNotificationPermission,
+  syncMealReminders,
+} from "@/services/notificationService";
 import { colors } from "@/theme/colors";
+import MealTimesEditor from "@/components/MealTimesEditor";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -61,6 +69,11 @@ export default function SettingsScreen() {
   const profile = useSettingsStore((s) => s.profile);
   const setDailyCalorieTarget = useSettingsStore((s) => s.setDailyCalorieTarget);
   const setMacroTargets = useSettingsStore((s) => s.setMacroTargets);
+  const setMealTimes = useSettingsStore((s) => s.setMealTimes);
+  const setRemindersEnabled = useSettingsStore((s) => s.setRemindersEnabled);
+
+  const mealTimes = settings.mealTimes ?? DEFAULT_MEAL_TIMES;
+  const remindersEnabled = settings.remindersEnabled === true;
 
   const loggedDates = useLogStore((s) => s.loggedDates);
   const clearDay = useLogStore((s) => s.clearDay);
@@ -92,6 +105,26 @@ export default function SettingsScreen() {
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
+  };
+
+  const onToggleReminders = async (enabled: boolean) => {
+    if (enabled) {
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        Alert.alert(
+          "Notifications are off",
+          "Turn on notifications for Calorie Tracker in your device settings to get meal reminders.",
+        );
+        return;
+      }
+    }
+    setRemindersEnabled(enabled);
+    await syncMealReminders(mealTimes, enabled);
+  };
+
+  const onChangeMealTimes = (times: MealTimes) => {
+    setMealTimes(times);
+    if (remindersEnabled) syncMealReminders(times, true);
   };
 
   const onClearToday = () => {
@@ -213,6 +246,33 @@ export default function SettingsScreen() {
             {saved ? "Saved ✓" : "Save"}
           </Text>
         </Pressable>
+
+        {/* Reminders */}
+        <Text className="text-textSecondary text-sm font-semibold mb-3 mt-8">
+          REMINDERS
+        </Text>
+        <View className="flex-row items-center bg-surface rounded-2xl p-4 mb-3">
+          <View className="w-11 h-11 rounded-full bg-surface2 items-center justify-center mr-3">
+            <Bell color={colors.accent} size={22} />
+          </View>
+          <View className="flex-1 mr-2">
+            <Text className="text-textPrimary text-base font-semibold">
+              Meal reminders
+            </Text>
+            <Text className="text-textMuted text-sm">
+              A daily nudge to log each meal.
+            </Text>
+          </View>
+          <Switch
+            value={remindersEnabled}
+            onValueChange={onToggleReminders}
+            trackColor={{ true: colors.accent, false: colors.surface2 }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
+        {remindersEnabled ? (
+          <MealTimesEditor value={mealTimes} onChange={onChangeMealTimes} />
+        ) : null}
 
         {/* Danger zone */}
         <Text className="text-textSecondary text-sm font-semibold mb-3 mt-8">
