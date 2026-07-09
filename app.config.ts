@@ -13,6 +13,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
   backgroundColor: "#F5F7F1",
+  // OTA updates (EAS Update). The runtime fingerprint changes whenever native
+  // code/deps change, so a JS-only OTA is only delivered to builds whose native
+  // layer matches — a native change requires a fresh APK build.
+  runtimeVersion: {
+    policy: "fingerprint",
+  },
+  updates: {
+    url: "https://u.expo.dev/98e7d9a4-4a01-4ddc-bfab-3ce4767ea0bc",
+  },
   ios: {
     supportsTablet: true,
   },
@@ -52,6 +61,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           "Calorie Tracker accesses your photos so you can pick a meal image to analyze.",
       },
     ],
+    "expo-notifications",
   ],
   extra: {
     geminiApiKey: process.env.GEMINI_API_KEY ?? "",

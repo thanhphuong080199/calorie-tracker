@@ -15,12 +15,16 @@ import { MACRO_COLORS } from "./MacroBar";
 
 interface Props {
   name: string;
-  confidence: Confidence;
+  /** Recognition confidence badge. Omitted when editing an already-saved meal. */
+  confidence?: Confidence;
   items: RecognitionItem[];
   onChangeGrams: (index: number, grams: number) => void;
   onRemoveItem: (index: number) => void;
   onSave: () => void;
-  onRetake: () => void;
+  /** Retake the photo. Omitted (with the button hidden) in edit mode. */
+  onRetake?: () => void;
+  /** Label for the primary action button. Defaults to "Save". */
+  saveLabel?: string;
 }
 
 function MacroPill({
@@ -118,6 +122,7 @@ export default function ResultCard({
   onRemoveItem,
   onSave,
   onRetake,
+  saveLabel = "Save",
 }: Props) {
   const totals = sumNutrition(items.map((it) => scalePer100(it, it.grams)));
   const offCount = items.filter((i) => i.source === "openfoodfacts").length;
@@ -136,7 +141,7 @@ export default function ResultCard({
         {name}
       </Text>
       <View className="flex-row items-center mt-2 gap-2">
-        <ConfidenceBadge level={confidence} />
+        {confidence ? <ConfidenceBadge level={confidence} /> : null}
         <Text className="text-textMuted text-xs">{sourceLabel}</Text>
       </View>
 
@@ -177,19 +182,21 @@ export default function ResultCard({
 
       {/* Actions */}
       <View className="flex-row gap-3 mt-3">
-        <Pressable
-          onPress={onRetake}
-          className="flex-1 flex-row items-center justify-center bg-surface2 rounded-xl py-3.5 active:opacity-80"
-        >
-          <RotateCcw color={colors.textPrimary} size={18} />
-          <Text className="text-textPrimary font-semibold ml-2">Retake</Text>
-        </Pressable>
+        {onRetake ? (
+          <Pressable
+            onPress={onRetake}
+            className="flex-1 flex-row items-center justify-center bg-surface2 rounded-xl py-3.5 active:opacity-80"
+          >
+            <RotateCcw color={colors.textPrimary} size={18} />
+            <Text className="text-textPrimary font-semibold ml-2">Retake</Text>
+          </Pressable>
+        ) : null}
         <Pressable
           onPress={onSave}
           className="flex-1 flex-row items-center justify-center bg-accent rounded-xl py-3.5 active:opacity-80"
         >
           <Check color={colors.onAccent} size={18} strokeWidth={2.5} />
-          <Text className="text-onAccent font-bold ml-2">Save</Text>
+          <Text className="text-onAccent font-bold ml-2">{saveLabel}</Text>
         </Pressable>
       </View>
     </View>

@@ -1,0 +1,45 @@
+name: EAS Update (OTA)
+
+# Publishes a JS/asset-only OTA update to the "preview" channel whenever code
+# lands on main. Installed preview APKs pick it up on next launch — no rebuild.
+# Only the JS bundle + assets ship this way; native/dep changes need a fresh
+# APK from the "EAS Build" workflow (a fingerprint mismatch means the OTA is
+# simply not delivered to older builds). GEMINI_API_KEY is loaded from the EAS
+# "preview" environment via --environment, matching the preview build profile.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # allow manual OTA pushes from the Actions tab
+
+# Don't stack publishes if several merges land quickly — cancel the older run.
+concurrency:
+  group: eas-update-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  update:
+    name: Publish OTA update (preview channel)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set up EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Publish OTA update
+        run: eas update --branch preview --environment preview --message "$COMMIT_MESSAGE" --non-interactive
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message || github.sha }}

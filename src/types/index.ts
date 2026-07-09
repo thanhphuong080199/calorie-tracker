@@ -1,4 +1,4 @@
-export type Source = "openfoodfacts" | "gemini_estimate";
+export type Source = "openfoodfacts" | "gemini_estimate" | "manual";
 export type Confidence = "high" | "medium" | "low";
 
 /** One persisted component of a meal. Nutrition values are TOTALS for `grams`. */
@@ -82,6 +82,15 @@ export interface TdeeProfile {
   dietType: DietType;
 }
 
+/** Local time-of-day for each meal, as "HH:MM" (24-hour). Drives reminders. */
+export interface MealTimes {
+  breakfast: string;
+  lunch: string;
+  dinner: string;
+}
+
+export type MealKey = keyof MealTimes;
+
 export interface UserSettings {
   dailyCalorieTarget: number;
   proteinTarget?: number;
@@ -91,6 +100,10 @@ export interface UserSettings {
   onboarded?: boolean;
   /** The profile the current targets were derived from, so it can be edited. */
   profile?: TdeeProfile;
+  /** When the user usually eats — the schedule for daily meal reminders. */
+  mealTimes?: MealTimes;
+  /** Master switch for local meal/streak reminder notifications. */
+  remindersEnabled?: boolean;
 }
 
 /**

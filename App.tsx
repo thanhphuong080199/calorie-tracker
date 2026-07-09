@@ -1,5 +1,5 @@
 import "./global.css";
-import React from "react";
+import React, { useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -16,7 +16,14 @@ import {
 import RootNavigator from "@/navigation/RootNavigator";
 import { useLogStore } from "@/store/logStore";
 import { useSettingsStore } from "@/store/settingsStore";
+import {
+  configureNotificationHandler,
+  syncMealReminders,
+} from "@/services/notificationService";
+import { DEFAULT_MEAL_TIMES } from "@/utils/time";
 import { colors } from "@/theme/colors";
+
+configureNotificationHandler();
 
 const navTheme: Theme = {
   ...DefaultTheme,
@@ -39,6 +46,15 @@ export default function App() {
     SpaceGrotesk_700Bold,
   });
   const ready = settingsReady && logsReady && fontsReady;
+
+  // Once settings have hydrated, reconcile the OS reminder schedule with saved
+  // preferences (times may have changed on another launch; reboots can drop
+  // scheduled notifications on some devices).
+  useEffect(() => {
+    if (!settingsReady) return;
+    const { mealTimes, remindersEnabled } = useSettingsStore.getState();
+    syncMealReminders(mealTimes ?? DEFAULT_MEAL_TIMES, remindersEnabled === true);
+  }, [settingsReady]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

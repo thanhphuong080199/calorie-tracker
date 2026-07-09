@@ -17,9 +17,16 @@ import {
   ActivityLevel,
   DietType,
   MainGoal,
+  MealTimes,
   Sex,
   TdeeProfile,
 } from "@/types";
+import { DEFAULT_MEAL_TIMES } from "@/utils/time";
+import {
+  requestNotificationPermission,
+  syncMealReminders,
+} from "@/services/notificationService";
+import MealTimesEditor from "@/components/MealTimesEditor";
 import {
   ACTIVITY_LABELS,
   ACTIVITY_ORDER,
@@ -48,9 +55,10 @@ const INPUT_STEPS = [
   "goal",
   "activity",
   "diet",
+  "mealtimes",
 ] as const;
-const LOADING_STEP = INPUT_STEPS.length; // 9
-const PLAN_STEP = LOADING_STEP + 1; // 10
+const LOADING_STEP = INPUT_STEPS.length; // 10
+const PLAN_STEP = LOADING_STEP + 1; // 11
 
 const MONTHS = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -123,7 +131,10 @@ export default function OnboardingScreen() {
   const isEdit = (route.params as { edit?: boolean } | undefined)?.edit === true;
 
   const setProfile = useSettingsStore((s) => s.setProfile);
+  const saveMealTimes = useSettingsStore((s) => s.setMealTimes);
+  const setRemindersEnabled = useSettingsStore((s) => s.setRemindersEnabled);
   const existing = useSettingsStore((s) => s.profile);
+  const existingTimes = useSettingsStore((s) => s.mealTimes);
 
   const [step, setStep] = useState(0);
 
@@ -150,6 +161,9 @@ export default function OnboardingScreen() {
     existing?.activityLevel ?? "sedentary",
   );
   const [diet, setDiet] = useState<DietType>(existing?.dietType ?? "balanced");
+  const [mealTimes, setMealTimes] = useState<MealTimes>(
+    existingTimes ?? DEFAULT_MEAL_TIMES,
+  );
 
   const dayCount = daysInMonth(year, month);
   const clampedDay = Math.min(day, dayCount);
@@ -192,8 +206,22 @@ export default function OnboardingScreen() {
     else if (step === LOADING_STEP - 1) setStep(LOADING_STEP); // dinner → loading
   };
 
-  const onFinish = () => {
+  const onFinish = async () => {
     setProfile(profile);
+    saveMealTimes(mealTimes);
+
+    // First launch opts the user into reminders (subject to the OS permission
+    // prompt); when editing later we only reschedule if they're already on, so
+    // we never silently re-enable something they turned off.
+    const alreadyOn = useSettingsStore.getState().remindersEnabled === true;
+    if (alreadyOn) {
+      await syncMealReminders(mealTimes, true);
+    } else if (!isEdit) {
+      const granted = await requestNotificationPermission();
+      setRemindersEnabled(granted);
+      await syncMealReminders(mealTimes, granted);
+    }
+
     if (isEdit) navigation.goBack();
     // First launch: flipping `onboarded` swaps the navigator to the tabs.
   };
@@ -450,6 +478,19 @@ export default function OnboardingScreen() {
                 onPress={() => setDiet(d)}
               />
             ))}
+          </View>
+        )}
+
+        {/* --------------------------- MEAL TIMES --------------------------- */}
+        {step === 9 && (
+          <View className="flex-1 justify-center py-6">
+            <Text className="text-textPrimary text-3xl font-display text-center mb-1">
+              When do you usually eat?
+            </Text>
+            <Text className="text-textMuted text-center mb-7">
+              We'll send a gentle reminder to log each meal.
+            </Text>
+            <MealTimesEditor value={mealTimes} onChange={setMealTimes} />
           </View>
         )}
 

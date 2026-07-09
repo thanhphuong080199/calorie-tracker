@@ -1,15 +1,17 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { House, Settings as SettingsIcon } from "lucide-react-native";
+import { House, TrendingUp, Settings as SettingsIcon } from "lucide-react-native";
 import { RootStackParamList, TabParamList } from "./types";
 import { colors } from "@/theme/colors";
 import { useSettingsStore } from "@/store/settingsStore";
 import HomeScreen from "@/screens/HomeScreen";
+import InsightsScreen from "@/screens/InsightsScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 import ScanScreen from "@/screens/ScanScreen";
 import OnboardingScreen from "@/screens/OnboardingScreen";
 import MealDetailScreen from "@/screens/MealDetailScreen";
+import ManualEntryScreen from "@/screens/ManualEntryScreen";
 
 const Tab = createBottomTabNavigator<TabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -32,6 +34,15 @@ function Tabs() {
         component={HomeScreen}
         options={{
           tabBarIcon: ({ color, size }) => <House color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
+        name="Insights"
+        component={InsightsScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <TrendingUp color={color} size={size} />
+          ),
         }}
       />
       <Tab.Screen
@@ -78,6 +89,11 @@ export default function RootNavigator() {
           <Stack.Screen
             name="MealDetail"
             component={MealDetailScreen}
+            options={{ presentation: "modal", animation: "slide_from_bottom" }}
+          />
+          <Stack.Screen
+            name="ManualEntry"
+            component={ManualEntryScreen}
             options={{ presentation: "modal", animation: "slide_from_bottom" }}
           />
         </>
