@@ -12,6 +12,8 @@ interface LogState {
 
   getLog: (date: string) => DailyLog | undefined;
   addMeal: (date: string, meal: MealEntry) => void;
+  /** Replace an existing meal (matched by id) in place, keeping its position. */
+  updateMeal: (date: string, meal: MealEntry) => void;
   deleteMeal: (date: string, mealId: string) => void;
   clearDay: (date: string) => void;
   /** Set of dates that have at least one meal — used for streaks. */
@@ -41,6 +43,21 @@ export const useLogStore = create<LogState>()(
             logs: {
               ...state.logs,
               [date]: { ...existing, meals: [...existing.meals, meal] },
+            },
+          };
+        }),
+
+      updateMeal: (date, meal) =>
+        set((state) => {
+          const existing = state.logs[date];
+          if (!existing) return state;
+          return {
+            logs: {
+              ...state.logs,
+              [date]: {
+                ...existing,
+                meals: existing.meals.map((m) => (m.id === meal.id ? meal : m)),
+              },
             },
           };
         }),

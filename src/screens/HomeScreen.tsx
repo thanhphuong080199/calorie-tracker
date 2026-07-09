@@ -3,12 +3,13 @@ import { View, Text, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Plus, UtensilsCrossed } from "lucide-react-native";
+import { Plus, Search, UtensilsCrossed } from "lucide-react-native";
 import { RootStackParamList } from "@/navigation/types";
 import { useLogStore } from "@/store/logStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { totalCalories, totalMacros } from "@/utils/nutrition";
 import { today, isToday } from "@/utils/date";
+import { tapLight } from "@/utils/haptics";
 import { colors } from "@/theme/colors";
 import CalorieRing from "@/components/CalorieRing";
 import MacroBar from "@/components/MacroBar";
@@ -64,11 +65,28 @@ export default function HomeScreen() {
         </View>
 
         {/* Meal list */}
-        <Text className="text-textSecondary text-sm font-semibold mb-1">
-          {meals.length > 0
-            ? `${meals.length} ${meals.length === 1 ? "meal" : "meals"}`
-            : "Meals"}
-        </Text>
+        <View className="flex-row items-center justify-between mb-1">
+          <Text className="text-textSecondary text-sm font-semibold">
+            {meals.length > 0
+              ? `${meals.length} ${meals.length === 1 ? "meal" : "meals"}`
+              : "Meals"}
+          </Text>
+          {isToday(date) ? (
+            <Pressable
+              onPress={() => {
+                tapLight();
+                navigation.navigate("ManualEntry", { date });
+              }}
+              hitSlop={8}
+              className="flex-row items-center active:opacity-70"
+            >
+              <Search color={colors.accent} size={15} />
+              <Text className="text-accent text-sm font-semibold ml-1">
+                Add food
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
 
         {meals.length === 0 ? (
           <View className="items-center justify-center py-12">
@@ -94,7 +112,10 @@ export default function HomeScreen() {
       {/* FAB — only meaningful for today */}
       {isToday(date) ? (
         <Pressable
-          onPress={() => navigation.navigate("Scan")}
+          onPress={() => {
+            tapLight();
+            navigation.navigate("Scan");
+          }}
           className="absolute bottom-8 right-6 w-16 h-16 rounded-full bg-accent items-center justify-center active:opacity-80"
           style={{
             shadowColor: colors.accent,

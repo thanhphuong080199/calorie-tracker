@@ -11,6 +11,8 @@ export type RootStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList>;
   Scan: undefined;
   MealDetail: { date: string; mealId: string };
+  /** Add a meal by hand (no mealId) or edit an existing one (with mealId). */
+  ManualEntry: { date: string; mealId?: string };
 };
 
 declare global {

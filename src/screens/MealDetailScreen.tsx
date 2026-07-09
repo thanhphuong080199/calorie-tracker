@@ -7,6 +7,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   X,
   Trash2,
+  Pencil,
   Database,
   Sparkles,
   UtensilsCrossed,
@@ -14,6 +15,7 @@ import {
 import { RootStackParamList } from "@/navigation/types";
 import { useLogStore } from "@/store/logStore";
 import { formatTime } from "@/utils/date";
+import { tapWarning } from "@/utils/haptics";
 import { colors } from "@/theme/colors";
 import { MACRO_COLORS } from "@/components/MacroBar";
 
@@ -58,6 +60,7 @@ export default function MealDetailScreen() {
   const deleteMeal = useLogStore((s) => s.deleteMeal);
 
   const handleDelete = () => {
+    tapWarning();
     deleteMeal(date, mealId);
     navigation.goBack();
   };
@@ -96,13 +99,24 @@ export default function MealDetailScreen() {
         <Text className="text-textSecondary text-sm">
           {formatTime(meal.timestamp)}
         </Text>
-        <Pressable
-          onPress={handleDelete}
-          hitSlop={8}
-          className="w-10 h-10 items-center justify-center rounded-full bg-surface2 active:opacity-70"
-        >
-          <Trash2 color={colors.danger} size={19} />
-        </Pressable>
+        <View className="flex-row items-center gap-2">
+          <Pressable
+            onPress={() =>
+              navigation.navigate("ManualEntry", { date, mealId })
+            }
+            hitSlop={8}
+            className="w-10 h-10 items-center justify-center rounded-full bg-surface2 active:opacity-70"
+          >
+            <Pencil color={colors.textPrimary} size={18} />
+          </Pressable>
+          <Pressable
+            onPress={handleDelete}
+            hitSlop={8}
+            className="w-10 h-10 items-center justify-center rounded-full bg-surface2 active:opacity-70"
+          >
+            <Trash2 color={colors.danger} size={19} />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView
@@ -128,7 +142,11 @@ export default function MealDetailScreen() {
         <Text className="text-textPrimary text-2xl font-bold mt-5">
           {meal.name}
         </Text>
-        <Text className="text-textMuted text-sm mt-1">{meal.servingG}g total</Text>
+        {meal.servingG > 0 ? (
+          <Text className="text-textMuted text-sm mt-1">
+            {meal.servingG}g total
+          </Text>
+        ) : null}
 
         {/* Calorie total */}
         <View className="items-center my-6">
@@ -191,7 +209,9 @@ export default function MealDetailScreen() {
         <Text className="text-textMuted text-xs text-center mt-6">
           {meal.source === "openfoodfacts"
             ? "Nutrition from Open Food Facts"
-            : "Nutrition estimated by AI"}
+            : meal.source === "manual"
+              ? "Entered manually"
+              : "Nutrition estimated by AI"}
         </Text>
       </ScrollView>
     </SafeAreaView>

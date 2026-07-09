@@ -7,6 +7,7 @@ import Swipeable from "react-native-gesture-handler/Swipeable";
 import { Trash2, Sparkles, UtensilsCrossed } from "lucide-react-native";
 import { MealEntry } from "@/types";
 import { formatTime } from "@/utils/date";
+import { tapWarning } from "@/utils/haptics";
 import { colors } from "@/theme/colors";
 
 interface Props {
@@ -22,6 +23,7 @@ export default function MealRow({ meal, onDelete, onPress }: Props) {
   const renderRightActions = () => (
     <Pressable
       onPress={() => {
+        tapWarning();
         ref.current?.close();
         onDelete(meal.id);
       }}
@@ -83,7 +85,8 @@ export default function MealRow({ meal, onDelete, onPress }: Props) {
             </Text>
           ) : null}
           <Text className="text-textMuted text-xs mt-0.5">
-            {meal.servingG}g · {formatTime(meal.timestamp)}
+            {meal.servingG > 0 ? `${meal.servingG}g · ` : ""}
+            {formatTime(meal.timestamp)}
           </Text>
         </View>
 

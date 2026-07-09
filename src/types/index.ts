@@ -1,4 +1,4 @@
-export type Source = "openfoodfacts" | "gemini_estimate";
+export type Source = "openfoodfacts" | "gemini_estimate" | "manual";
 export type Confidence = "high" | "medium" | "low";
 
 /** One persisted component of a meal. Nutrition values are TOTALS for `grams`. */

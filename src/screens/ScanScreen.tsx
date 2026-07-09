@@ -19,6 +19,7 @@ import { toResizedBase64, saveThumbnail } from "@/utils/image";
 import { scalePer100, sumNutrition, clampGrams } from "@/utils/nutrition";
 import { today } from "@/utils/date";
 import { newId } from "@/utils/id";
+import { tapSuccess } from "@/utils/haptics";
 import { colors } from "@/theme/colors";
 import ResultCard from "@/components/ResultCard";
 
@@ -156,6 +157,7 @@ export default function ScanScreen() {
       items,
     };
     addMeal(today(), entry);
+    tapSuccess();
     navigation.goBack();
   };
 
